@@ -1,0 +1,27 @@
+{
+  "name": "hain-plugin-currencyconvert",
+  "version": "0.0.1",
+  "description": "A currency converter using the Fixer.io API for Hain",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wilt00/hain-plugin-currencyconvert.git"
+  },
+  
+  "keywords": [
+    "hain0"
+  ],
+
+  "author": "Will Toher",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wilt00/hain-plugin-currencyconvert/issues"
+  },
+  "homepage": "https://github.com/wilt00/hain-plugin-currencyconvert#readme",
+  "hain": {
+    "prefix": "/currency ",
+    "usage": "/currency 5 eur gbp",
+    "icon": "#fa fa-money",
+    "redirect": "/currency "
+  }
+}
