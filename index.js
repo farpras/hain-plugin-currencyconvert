@@ -3,6 +3,8 @@
 (function(){
 	'use strict';
 
+	const ncp = require('copy-paste-win32fix');
+
 	module.exports = (pluginContext) => {
 
 		//This controls the number of decimal places in the output answer
@@ -13,7 +15,6 @@
 		const app = pluginContext.app;
 
 		const http = require("http");
-		//const clipboard = pluginContext.app.clipboard;
 
 		const currencies = [
 			"AUD",
@@ -52,7 +53,7 @@
 
 		function search(query, res) {
 			const query_trim = query.trim();
-			var query_split = query_trim.split(" ");
+			const query_split = query_trim.split(" ");
 
 			if (query_trim.length === 0) {
 	      		return;
@@ -61,49 +62,47 @@
 	    	const is_valid_amt = !(isNaN(query_split[0]));
 	    	
 	    	if(!is_valid_amt){
-	    		res.add({
+	    		return res.add({
 	    			id: 'invalid',
-	    			payload: '',
+	    			payload: 'bad number',
 	    			title: query_trim,
 	    			desc: 'Cannot convert ' + query_split[0]
 	    		});
-	    		return;
 	    	}
 
 	    	if (query_split.length < 3){
-	    		res.add({
+	    		return res.add({
 	    			id: 'invalid',
-	    			payload: '',
+	    			payload: 'too few characters',
 	    			title: query_trim,
 	    			desc: 'Converting...'
 	    		});
-	    		return;
 	    	}
 
 	    	if (query_split.length > 3 ){
-	    		res.add({
+	    		return res.add({
 	    			id: 'invalid',
-	    			payload: '',
+	    			payload: 'too many arguments',
 	    			title: query_trim,
 	    			desc: 'Too many arguments!'
 	    		});
-	    		return;
 	    	}
 
-	    	query_split[0] = parseFloat(query_split[0]);
+	    	var money = new Object();
+	    	money.rawNumber = parseFloat(query_split[0]);
 
-	    	query_split[1] = query_split[1].toUpperCase();
-	    	const is_valid_curr_from = currencies.includes(query_split[1]);
+	    	money.currencyFrom = query_split[1].toUpperCase();
+	    	const is_valid_curr_from = currencies.includes(money.currencyFrom);
 
-	    	query_split[2] = query_split[2].toUpperCase();
-	    	const is_valid_curr_to = currencies.includes(query_split[2]);
+	    	money.currencyTo = query_split[2].toUpperCase();
+	    	const is_valid_curr_to = currencies.includes(money.currencyTo);
 	    	
 	    	if(!is_valid_curr_from){
 				res.add({
 					id: 'invalid',
 					payload: '',
 					title: query_trim,
-					desc: query_split[1] + ' is not a supported currency.'
+					desc: money.currencyFrom + ' is not a supported currency.'
 				});
 				return;
 			}
@@ -113,7 +112,7 @@
 					id: 'invalid',
 					payload: '',
 					title: query_trim,
-					desc: query_split[2] + ' is not a supported currency.'
+					desc: money.currencyTo + ' is not a supported currency.'
 				});
 				return;
 			}
@@ -121,15 +120,14 @@
 			if(is_valid_amt && is_valid_curr_to && is_valid_curr_from){
 				res.add({
 					id: 'working',
-					payload: query_split,
+					payload: money,
 					title: query_trim,
-					desc: 'Converting ' + query_split[0] + " " + query_split[1] + ' to ' + query_split[2] + "..."
+					desc: 'Converting ' + money.rawNumber + " " + money.currencyFrom + ' to ' + money.currencyTo + "..."
 				});
 				
-				getRate(query_split, function(payload) {
+				getRate(money, function(money) {
 					res.remove('working');
-					const final_amt = payload[0] * payload[3];
-					payload.push(final_amt);
+					money.finalAmt = money.rawNumber * money.rate;
 					/*
 					At this point, for payload:
 					0 - original number
@@ -140,15 +138,15 @@
 					*/
 					res.add({
 						id: 'done',
-						payload: payload,
-						title: '' + payload[0] + ' ' + payload[1] + ' = ' + final_amt + ' ' + payload[2],
-						desc: 'Type Enter to copy \'' + final_amt + '\' to clipboard'
+						payload: money,
+						title: '' + money.rawNumber + ' ' + money.currencyFrom + ' = ' + money.finalAmt + ' ' + money.currencyTo,
+						desc: 'Type Enter to copy \'' + money.finalAmt + '\' to clipboard'
 					});
 				});
 			} else {
 				res.add({
 	    			id: 'invalid',
-	    			payload: '',
+	    			payload: 'something is invalid',
 	    			title: query_trim,
 	    			desc: 'Converting...'
 	    		});
@@ -156,12 +154,12 @@
 			}
 		}
 
-		function getRate(payload, callback){
+		function getRate(money, callback){
 
 			http.get({
 				"method": "GET",
 				"hostname": "api.fixer.io",
-				"path": "/latest?base=" + payload[1] +"&symbols=" + payload[2]
+				"path": "/latest?base=" + money.currencyFrom +"&symbols=" + money.currencyTo
 			}, function(response) {
 				var body = '';
 				response.on('data', function(d) {
@@ -169,10 +167,10 @@
        			});
 				response.on('end', function() {
 					const parsedBody = JSON.parse(body);
-					const rate = parsedBody.rates[payload[2]];
+					const rate = parsedBody.rates[money.currencyTo];
 					const rate_2dp = (Number(rate)).toFixed(NUMBER_OF_DECIMAL_PLACES);
-					payload.push(rate_2dp);
-					callback(payload);
+					money.rate = rate_2dp;
+					callback(money);
 				});
 			}).on('error', (e) => {
 				logger.log(`Got error: ${e.message}`);
@@ -180,14 +178,14 @@
 		}
 
 		function execute(id, payload){
-			if (id === 'invalid'){
+			if (id != 'done'){
 				return;
 			}
 
-			//clipboard.writeText(final_amt);
-			//toast.enqueue(final_amt + " has been copied to the clipboard");
-			toast.enqueue("This doesn't actually work yet, sorry!");
-			//app.close();
+			ncp.copy(payload.finalAmt, () => {
+				toast.enqueue("Successfully copied \"" + payload.finalAmt + "\" to the clipboard!");
+				app.setQuery("");
+			});
 		}
 
 		return { search, execute };
