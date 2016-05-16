@@ -1,6 +1,6 @@
 {
   "name": "hain-plugin-currencyconvert",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A currency converter using the Fixer.io API for Hain",
   "main": "index.js",
   "repository": {
@@ -23,5 +23,8 @@
     "usage": "/currency 5 eur gbp",
     "icon": "#fa fa-money",
     "redirect": "/currency "
+  },
+  "dependencies": {
+    "copy-paste-win32fix": "^1.2.0"
   }
 }
