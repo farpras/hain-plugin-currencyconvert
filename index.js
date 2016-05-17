@@ -56,7 +56,12 @@
 			const query_split = query_trim.split(" ");
 
 			if (query_trim.length === 0) {
-	      		return;
+	      		return res.add({
+	      			id: 'invalid',
+	      			payload: 'no data',
+	      			title: 'Please enter the amount you\'d like to convert',
+	      			desc: 'e.g. 5.30 EUR GBP'
+	      		});
 	    	}
 
 	    	const is_valid_amt = !(isNaN(query_split[0]));
@@ -128,14 +133,6 @@
 				getRate(money, function(money) {
 					res.remove('working');
 					money.finalAmt = money.rawNumber * money.rate;
-					/*
-					At this point, for payload:
-					0 - original number
-					1 - currency from
-					2 - currency to
-					3 - rate of convertion
-					4 - final value
-					*/
 					res.add({
 						id: 'done',
 						payload: money,

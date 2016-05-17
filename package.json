@@ -20,7 +20,7 @@
   "homepage": "https://github.com/wilt00/hain-plugin-currencyconvert#readme",
   "hain": {
     "prefix": "/currency ",
-    "usage": "/currency 5 eur gbp",
+    "usage": "/currency 5 EUR GBP",
     "icon": "#fa fa-money",
     "redirect": "/currency "
   },
