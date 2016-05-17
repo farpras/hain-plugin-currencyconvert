@@ -1,6 +1,6 @@
 {
   "name": "hain-plugin-currencyconvert",
-  "version": "0.2.1",
+  "version": "0.2.3",
   "description": "A currency converter using the Fixer.io API for Hain",
   "main": "index.js",
   "repository": {

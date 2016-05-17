@@ -132,12 +132,12 @@
 				
 				getRate(money, function(money) {
 					res.remove('working');
-					money.finalAmt = money.rawNumber * money.rate;
+					money.finalAmt = (money.rawNumber * money.rate).toFixed(NUMBER_OF_DECIMAL_PLACES);
 					res.add({
 						id: 'done',
 						payload: money,
 						title: '' + money.rawNumber + ' ' + money.currencyFrom + ' = ' + money.finalAmt + ' ' + money.currencyTo,
-						desc: 'Type Enter to copy \'' + money.finalAmt + '\' to clipboard'
+						desc: 'Press Enter to copy \'' + money.finalAmt + '\' to clipboard'
 					});
 				});
 			} else {
@@ -164,9 +164,7 @@
        			});
 				response.on('end', function() {
 					const parsedBody = JSON.parse(body);
-					const rate = parsedBody.rates[money.currencyTo];
-					const rate_2dp = (Number(rate)).toFixed(NUMBER_OF_DECIMAL_PLACES);
-					money.rate = rate_2dp;
+					money.rate = parsedBody.rates[money.currencyTo];;
 					callback(money);
 				});
 			}).on('error', (e) => {
